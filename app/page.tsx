@@ -58,14 +58,30 @@ function numberFrom(value: unknown, fallback = 0) {
   return fallback;
 }
 
+function isWrongRoleShape(targetRole: string, raw: any) {
+  const role = targetRole.toLowerCase();
+  const text = JSON.stringify({
+    weaknesses: raw?.weaknesses || raw?.missingSkills,
+    skills: raw?.skills,
+    project: raw?.recommendedProject,
+    opportunities: raw?.opportunities
+  }).toLowerCase();
+  if (role.includes("frontend")) return /docker|kubernetes|redis|fastapi|backend ai|task queue|system design/.test(text);
+  if (role.includes("ml") || role.includes("data scientist")) return /frontend developer|react workbench|next\.js app|ui component/.test(text);
+  if (role.includes("devops")) return /frontend developer|ml engineer|react|model training/.test(text);
+  return false;
+}
+
 function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extractedSkills?: string[]; github?: unknown; market?: unknown[]; targetRole?: string } = {}): CareerTwin {
-  const targetRole = raw?.targetRole || extras.targetRole || "Software Developer";
+  const targetRole = extras.targetRole || raw?.targetRole || "Software Developer";
   const roleFallback = generateFallbackCareerTwin(targetRole);
-  const strengths = Array.isArray(raw?.strengths) ? raw.strengths : roleFallback.strengths;
-  const weaknesses = Array.isArray(raw?.weaknesses) ? raw.weaknesses : raw?.missingSkills || roleFallback.weaknesses;
+  const wrongRole = isWrongRoleShape(targetRole, raw);
+  const roleRaw = wrongRole ? roleFallback : raw;
+  const strengths = Array.isArray(roleRaw?.strengths) ? roleRaw.strengths : roleFallback.strengths;
+  const weaknesses = Array.isArray(roleRaw?.weaknesses) ? roleRaw.weaknesses : roleRaw?.missingSkills || roleFallback.weaknesses;
   const skillNames = Array.from(new Set([...(extras.extractedSkills || []), ...strengths, ...weaknesses]));
-  const skills = Array.isArray(raw?.skills)
-    ? raw.skills.map((skill: any) => ({
+  const skills = Array.isArray(roleRaw?.skills)
+    ? roleRaw.skills.map((skill: any) => ({
         name: String(skill.name),
         score: numberFrom(skill.score, skill.missing ? 35 : 75),
         missing: Boolean(skill.missing),
@@ -75,14 +91,14 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
         name,
         score: weaknesses.includes(name) ? 32 : 78,
         missing: weaknesses.includes(name),
-        recommendation: weaknesses.includes(name) ? `Build ${raw?.recommendedProject?.title || roleFallback.recommendedProject.title}.` : `Use ${name} as profile evidence.`
+        recommendation: weaknesses.includes(name) ? `Build ${roleRaw?.recommendedProject?.title || roleFallback.recommendedProject.title}.` : `Use ${name} as profile evidence.`
       }));
 
-  const project = raw?.recommendedProject || roleFallback.recommendedProject;
+  const project = roleRaw?.recommendedProject || roleFallback.recommendedProject;
   const fallbackProject = roleFallback.recommendedProject;
-  const future = raw?.futurePrediction || roleFallback.futurePrediction;
-  const opportunities = Array.isArray(raw?.opportunities) ? raw.opportunities : roleFallback.opportunities;
-  const roadmap = Array.isArray(raw?.weeklyRoadmap) ? raw.weeklyRoadmap : [];
+  const future = roleRaw?.futurePrediction || roleFallback.futurePrediction;
+  const opportunities = Array.isArray(roleRaw?.opportunities) ? roleRaw.opportunities : roleFallback.opportunities;
+  const roadmap = Array.isArray(roleRaw?.weeklyRoadmap) ? roleRaw.weeklyRoadmap : [];
 
   return {
     targetRole,

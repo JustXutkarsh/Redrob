@@ -36,6 +36,14 @@ function TargetRoleBadge({ twin }: { twin: any }) {
   return <Badge className="mb-4 bg-cyan">Target Role: {getTargetRole(twin)}</Badge>;
 }
 
+function roleChallenge(twin: any) {
+  const role = getTargetRole(twin).toLowerCase();
+  if (role.includes("frontend")) return { title: "Ship a production Next.js interface.", items: ["TypeScript components", "Responsive UI", "Performance report"], prompt: "Explain Next.js rendering choices." };
+  if (role.includes("ml") || role.includes("data scientist")) return { title: "Deploy an ML inference pipeline.", items: ["Experiment tracking", "Inference API", "Model monitoring"], prompt: "Explain model deployment tradeoffs." };
+  if (role.includes("devops")) return { title: "Automate a cloud deployment pipeline.", items: ["Terraform module", "CI/CD workflow", "Monitoring dashboard"], prompt: "Explain Kubernetes rollout strategy." };
+  return { title: "Ship a production API project.", items: ["Auth flow", "Database schema", "Deployment README"], prompt: "Explain API architecture." };
+}
+
 export function Dashboard() {
   const { twin } = useCareerTwin();
   if (!twin) return <EmptyState title="Dashboard unlocks after your AI Twin Scan." />;
@@ -407,9 +415,10 @@ export function OpportunityUnlockLab() {
   const blocking = currentTwin?.skills.filter((skill) => skill.missing).slice(0, 4) || [];
   const gaps = currentTwin ? (blocking.length ? blocking : currentTwin.weaknesses.slice(0, 3).map((name) => ({ name, score: 30, missing: true, recommendation: `Build proof for ${name}.` }))) : [];
   const currentMatch = currentTwin ? Math.max(70, Math.min(92, (currentTwin.opportunities[0]?.match || 92) - 8)) : 0;
+  const challenge = roleChallenge(currentTwin);
   const plans: Record<string, { score: number; interviews: number; opportunities: number; match: number }> = {
     "Build Recommended Project": { score: (currentTwin?.careerScore || 0) + 7, interviews: 83, opportunities: 23, match: currentMatch + 13 },
-    "Learn Docker Only": { score: (currentTwin?.careerScore || 0) + 1, interviews: 66, opportunities: 6, match: currentMatch + 4 },
+    "Close Top Skill Gap": { score: (currentTwin?.careerScore || 0) + 1, interviews: 66, opportunities: 6, match: currentMatch + 4 },
     "Win Hackathon": { score: (currentTwin?.careerScore || 0) + 5, interviews: 76, opportunities: 14, match: currentMatch + 9 },
     "Contribute to Open Source": { score: (currentTwin?.careerScore || 0) + 4, interviews: 72, opportunities: 11, match: currentMatch + 7 },
     "Custom Action": { score: (currentTwin?.careerScore || 0) + 3, interviews: 70, opportunities: 9, match: currentMatch + 6 }
@@ -419,7 +428,7 @@ export function OpportunityUnlockLab() {
   useEffect(() => {
     if (!currentTwin) return;
     let alive = true;
-    fetch("/api/unlock-lab", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skills: gaps.map((skill) => skill.name) }) })
+    fetch("/api/unlock-lab", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skills: gaps.map((skill) => skill.name), targetRole: getTargetRole(currentTwin) }) })
       .then((response) => response.json())
       .then((data) => alive && setResources(data.resources || []))
       .catch(() => alive && setResources([]));
@@ -480,8 +489,8 @@ export function OpportunityUnlockLab() {
 
         <Card className="bg-yellow">
           <h3 className="text-3xl font-black">Build Proof</h3>
-          <p className="mt-3 text-2xl font-black">Containerize your AI Task Queue.</p>
-          <div className="mt-4 grid gap-2 font-extrabold"><p>✓ Dockerfile</p><p>✓ docker-compose.yml</p><p>✓ Deployment README</p></div>
+          <p className="mt-3 text-2xl font-black">{challenge.title}</p>
+          <div className="mt-4 grid gap-2 font-extrabold">{challenge.items.map((item) => <p key={item}>✓ {item}</p>)}</div>
           <p className="mt-4 font-black">Estimated Time: 3 Days</p><p className="font-black text-success">Career Score Gain: +3</p><p className="font-black">Recruiter Signal: High</p>
           <Button className="mt-5" onClick={() => addLabLog("Mini challenge generated for production proof.")}>Generate Challenge</Button>
         </Card>
@@ -517,7 +526,7 @@ export function OpportunityUnlockLab() {
         <ActivityFeed />
         <Card>
           <h3 className="text-3xl font-black">Need help? Ask AI Mentor.</h3>
-          <div className="mt-4 flex flex-wrap gap-2">{["What is Docker Compose?", "Help me deploy this project.", "Explain Redis queues.", "How should I structure this repository?"].map((prompt) => <button key={prompt} onClick={() => { setMentorPrompt(prompt); askMentor(prompt); }} className="rounded-full border-[3px] border-ink bg-yellow px-4 py-2 font-black">{prompt}</button>)}</div>
+          <div className="mt-4 flex flex-wrap gap-2">{[challenge.prompt, "Help me deploy this project.", "How should I structure this repository?", `How do I improve for ${getTargetRole(currentTwin)}?`].map((prompt) => <button key={prompt} onClick={() => { setMentorPrompt(prompt); askMentor(prompt); }} className="rounded-full border-[3px] border-ink bg-yellow px-4 py-2 font-black">{prompt}</button>)}</div>
           <div className="mt-4 flex gap-3"><input value={mentorPrompt} onChange={(e) => setMentorPrompt(e.target.value)} className="min-w-0 flex-1 rounded-2xl border-[4px] border-ink bg-white p-3 font-black" /><Button onClick={() => askMentor()} disabled={mentorLoading}>{mentorLoading ? "Thinking..." : "Ask"}</Button></div>
           {mentorAnswer && <p className="mt-4 rounded-2xl border-[4px] border-ink bg-white p-4 font-extrabold text-slate-700">{mentorAnswer}</p>}
         </Card>
@@ -532,11 +541,11 @@ export function OpportunityRadar() {
   const [scanning, setScanning] = useState(false);
   const [liveMode, setLiveMode] = useState("Live Intelligence Mode");
   const [filters, setFilters] = useState({ role: "", location: "India", remote: false, level: "Internship / Entry", salary: "Any", platform: "All", posted: "Last 10 Days" });
-  const [feed, setFeed] = useState<string[]>(["Searching AI startups...", "Ranking opportunities.", "Detected Docker skill gap.", "Recommended portfolio project."]);
+  const [feed, setFeed] = useState<string[]>(["Searching target-role openings...", "Ranking opportunities.", "Detected top skill gap.", "Recommended portfolio project."]);
   const currentTwin = twin;
   useEffect(() => {
     if (!currentTwin) return;
-    const timer = window.setInterval(() => setFeed((items) => [`${timestamp()} ${["Searching AI startups...", `Found ${currentTwin.opportunities.length * 9 + 1} openings.`, "Ranking opportunities.", "Detected Docker skill gap.", "Unlocked high-fit opportunities."][items.length % 5]}`, ...items].slice(0, 7)), 2600);
+    const timer = window.setInterval(() => setFeed((items) => [`${timestamp()} ${[`Searching ${getTargetRole(currentTwin)} openings...`, `Found ${currentTwin.opportunities.length * 9 + 1} openings.`, "Ranking opportunities.", "Detected top skill gap.", "Unlocked high-fit opportunities."][items.length % 5]}`, ...items].slice(0, 7)), 2600);
     return () => window.clearInterval(timer);
   }, [currentTwin?.opportunities.length]);
 
