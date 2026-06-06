@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { activitySeed } from "@/lib/app-data";
-import { mockCareerTwin } from "@/lib/career-twin";
+import { generateFallbackCareerTwin } from "@/lib/career-twin";
 import { architectSteps, numberFrom, scanSteps, timestamp, useCareerTwin } from "@/lib/career-ui";
 
 export function FloatingCards() {
@@ -24,6 +24,16 @@ export function FloatingCards() {
 export function EmptyState({ title = "Do your resume scan on AI Twin Scan first." }: { title?: string }) {
   const { navigate } = useCareerTwin();
   return <Card className="bg-[#fffaf0]"><h3 className="text-3xl font-black">{title}</h3><p className="mt-3 font-extrabold text-slate-700">Upload your resume PDF, enter GitHub, add LinkedIn, and choose a target role. Dashboard, score, opportunities, projects, and timeline will unlock only after that scan.</p><Button className="mt-5" onClick={() => navigate("AI Twin Scan")}>Go to AI Twin Scan</Button></Card>;
+}
+
+const roleSuggestions = ["Frontend Developer", "Backend Developer", "Full Stack Developer", "ML Engineer", "Data Scientist", "DevOps Engineer", "AI Engineer", "Mobile Developer", "Product Manager"];
+
+function getTargetRole(twin: any) {
+  return twin?.targetRole || "Software Developer";
+}
+
+function TargetRoleBadge({ twin }: { twin: any }) {
+  return <Badge className="mb-4 bg-cyan">Target Role: {getTargetRole(twin)}</Badge>;
 }
 
 export function Dashboard() {
@@ -43,7 +53,7 @@ function ActivityFeed() {
   return <Card><h3 className="mb-4 flex items-center gap-2 text-2xl font-black"><Activity /> Recent AI Activity</h3><div className="flex flex-col gap-3">{feed.map((item, i) => <motion.div key={`${item.time}-${item.message}-${i}`} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="rounded-2xl border-[3px] border-ink bg-white p-3 font-black"><span className="mr-3 text-orange">{item.time}</span>{item.message}</motion.div>)}</div></Card>;
 }
 
-export function TwinScan({ register, submit }: any) {
+export function TwinScan({ register, submit, setValue, targetRole }: any) {
   const { isScanning, scanStep, scanError } = useCareerTwin();
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
@@ -67,7 +77,11 @@ export function TwinScan({ register, submit }: any) {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-2 font-black">GitHub Username or URL<input {...register("githubUsername")} className="rounded-2xl border-[4px] border-ink bg-white p-4" placeholder="JustXutkarsh or github.com/JustXutkarsh" /></label>
-            <label className="grid gap-2 font-black">Target Role<input {...register("targetRole")} className="rounded-2xl border-[4px] border-ink bg-white p-4" /></label>
+            <label className="grid gap-2 font-black">Target Role<input {...register("targetRole", { required: true })} className="rounded-2xl border-[4px] border-ink bg-white p-4" /></label>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {roleSuggestions.map((role) => <button type="button" key={role} onClick={() => setValue("targetRole", role)} className={`rounded-full border-[3px] border-ink px-3 py-1 text-sm font-black ${targetRole === role ? "bg-cyan" : "bg-white"}`}>{role}</button>)}
           </div>
 
           <label className="grid gap-2 font-black">LinkedIn URL<input {...register("linkedInUrl")} className="rounded-2xl border-[4px] border-ink bg-white p-4" /></label>
@@ -182,7 +196,7 @@ export function AgentCenter() {
 export function CareerScore() {
   const { twin } = useCareerTwin();
   if (!twin) return <EmptyState />;
-  return <div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Card className="grid place-items-center"><div className="grid size-56 place-items-center rounded-full border-[14px] border-cyan outline outline-[5px] outline-ink"><span className="text-7xl font-black">{twin.careerScore}</span></div></Card><Card><h3 className="mb-4 text-2xl font-black">Why this score?</h3><div className="grid gap-4">{twin.skills.map((skill) => <div key={skill.name}><div className="mb-1 flex justify-between font-black"><button className={skill.missing ? "text-orange" : ""}>{skill.name}</button><span>{skill.score}%</span></div><div className="h-5 rounded-full border-[3px] border-ink bg-white"><motion.div initial={{ width: 0 }} animate={{ width: `${skill.score}%` }} className={`h-full rounded-full ${skill.missing ? "bg-orange" : "bg-cyan"}`} /></div><p className="mt-1 text-sm font-bold text-slate-700">{skill.recommendation}</p></div>)}</div></Card></div>;
+  return <div><TargetRoleBadge twin={twin} /><div className="grid gap-5 lg:grid-cols-[320px_1fr]"><Card className="grid place-items-center"><div className="grid size-56 place-items-center rounded-full border-[14px] border-cyan outline outline-[5px] outline-ink"><span className="text-7xl font-black">{twin.careerScore}</span></div></Card><Card><h3 className="mb-4 text-2xl font-black">Why this score?</h3><div className="grid gap-4">{twin.skills.map((skill) => <div key={skill.name}><div className="mb-1 flex justify-between font-black"><button className={skill.missing ? "text-orange" : ""}>{skill.name}</button><span>{skill.score}%</span></div><div className="h-5 rounded-full border-[3px] border-ink bg-white"><motion.div initial={{ width: 0 }} animate={{ width: `${skill.score}%` }} className={`h-full rounded-full ${skill.missing ? "bg-orange" : "bg-cyan"}`} /></div><p className="mt-1 text-sm font-bold text-slate-700">{skill.recommendation}</p></div>)}</div></Card></div></div>;
 }
 
 export function SkillMap() {
@@ -200,8 +214,9 @@ export function ProjectGenerator() {
   if (!twin) return <EmptyState />;
   const currentTwin = twin;
   const project = twin.recommendedProject;
-  const prd = project.prd || mockCareerTwin.recommendedProject.prd!;
-  const github = project.githubStrategy || mockCareerTwin.recommendedProject.githubStrategy!;
+  const roleFallback = generateFallbackCareerTwin(getTargetRole(twin));
+  const prd = project.prd || roleFallback.recommendedProject.prd!;
+  const github = project.githubStrategy || roleFallback.recommendedProject.githubStrategy!;
   const strengths = twin.strengths.slice(0, 3);
   const gaps = twin.weaknesses.slice(0, 4);
   const systemDesign = project.systemDesign || [];
@@ -218,9 +233,9 @@ export function ProjectGenerator() {
       await new Promise((resolve) => window.setTimeout(resolve, 625));
     }
     try {
-      const response = await fetch("/api/generate-project", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentTwin, mode }) });
+      const response = await fetch("/api/generate-project", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentTwin, careerTwin: currentTwin, targetRole: getTargetRole(currentTwin), githubData: currentTwin.githubData, mode }) });
       const data = await response.json();
-      const nextProject = { ...mockCareerTwin.recommendedProject, ...currentTwin.recommendedProject, ...(data.project || {}) };
+      const nextProject = { ...roleFallback.recommendedProject, ...currentTwin.recommendedProject, ...(data.project || {}) };
       setTwin({ ...currentTwin, recommendedProject: nextProject });
       setLogs((items) => [...items, { time: timestamp(), message: `Project Architect generated ${nextProject.title}.` }]);
     } finally {
@@ -235,6 +250,7 @@ export function ProjectGenerator() {
 
   return (
     <div className="grid gap-5">
+      <TargetRoleBadge twin={twin} />
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
@@ -429,6 +445,7 @@ export function OpportunityUnlockLab() {
 
   return (
     <div className="grid gap-5">
+      <TargetRoleBadge twin={currentTwin} />
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
@@ -436,7 +453,7 @@ export function OpportunityUnlockLab() {
             <p className="mt-3 max-w-3xl text-xl font-extrabold text-slate-700">Complete one action. Watch your career evolve.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            <Metric title="Current Match" value={`${currentMatch}%`} note={`Target: Backend AI Engineer`} color="bg-cyan" />
+            <Metric title="Current Match" value={`${currentMatch}%`} note={`Target: ${getTargetRole(currentTwin)}`} color="bg-cyan" />
             <Metric title="Career Score" value={currentTwin.careerScore} note="Estimated now" color="bg-yellow" />
             <Metric title="Blockers" value={gaps.length} note="Missing proof" color="bg-orange text-white" />
           </div>
@@ -492,7 +509,7 @@ export function OpportunityUnlockLab() {
       </Card>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <Card><h3 className="mb-4 text-3xl font-black">Why This Works</h3><p className="text-lg font-extrabold text-slate-700">{gaps[0]?.name || "Production"} proof is currently missing from your GitHub. Many AI startups use this as a filtering criterion. Building and deploying {currentTwin.recommendedProject.title} demonstrates containerization, production APIs, backend architecture, and infrastructure ownership. This removes one of the biggest blockers in your profile.</p></Card>
+        <Card><h3 className="mb-4 text-3xl font-black">Why This Works</h3><p className="text-lg font-extrabold text-slate-700">{gaps[0]?.name || "Production"} proof is currently missing from your GitHub for {getTargetRole(currentTwin)} roles. Recruiters use this as a filtering criterion. Building and publishing {currentTwin.recommendedProject.title} demonstrates the exact role-specific proof your target market expects.</p></Card>
         <Card><h3 className="mb-4 text-3xl font-black">Alternate Scenarios</h3><div className="grid gap-2">{Object.keys(plans).map((name) => <button key={name} onClick={() => setScenario(name)} className={`rounded-xl border-[3px] border-ink p-3 text-left font-black ${scenario === name ? "bg-cyan" : "bg-white"}`}>{name}</button>)}</div></Card>
       </div>
 
@@ -514,7 +531,7 @@ export function OpportunityRadar() {
   const [selected, setSelected] = useState<number | null>(null);
   const [scanning, setScanning] = useState(false);
   const [liveMode, setLiveMode] = useState("Live Intelligence Mode");
-  const [filters, setFilters] = useState({ role: "Backend AI Engineer", location: "India", remote: false, level: "Internship / Entry", salary: "Any", platform: "All", posted: "Last 10 Days" });
+  const [filters, setFilters] = useState({ role: "", location: "India", remote: false, level: "Internship / Entry", salary: "Any", platform: "All", posted: "Last 10 Days" });
   const [feed, setFeed] = useState<string[]>(["Searching AI startups...", "Ranking opportunities.", "Detected Docker skill gap.", "Recommended portfolio project."]);
   const currentTwin = twin;
   useEffect(() => {
@@ -525,6 +542,7 @@ export function OpportunityRadar() {
 
   if (!currentTwin) return <EmptyState title="Opportunity Radar unlocks after your AI Twin Scan." />;
 
+  const targetRole = getTargetRole(currentTwin);
   const opportunities = currentTwin.opportunities.filter((op) => filters.platform === "All" || op.sourcePlatform === filters.platform);
   const active = opportunities[selected === null ? 0 : Math.min(selected, opportunities.length - 1)] || currentTwin.opportunities[0];
   const gaps = active.missingSkills || [];
@@ -535,14 +553,15 @@ export function OpportunityRadar() {
     setScanning(true);
     setFeed((items) => [`${timestamp()} Searching LinkedIn, Wellfound, RemoteOK, Internshala, Cutshort...`, ...items]);
     try {
-      const response = await fetch("/api/opportunity-radar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentTwin, targetRole: filters.role, location: filters.location }) });
+      const response = await fetch("/api/opportunity-radar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentTwin, careerTwin: currentTwin, targetRole: filters.role || targetRole, location: filters.location }) });
       const data = await response.json();
-      const next = (data.opportunities?.length ? data.opportunities : mockCareerTwin.opportunities).map((op: any) => ({
+      const roleFallback = generateFallbackCareerTwin(targetRole);
+      const next = (data.opportunities?.length ? data.opportunities : roleFallback.opportunities).map((op: any) => ({
         title: op.title || "AI Opportunity",
         company: op.company || "AI Startup",
         match: numberFrom(op.matchScore ?? op.match, 80),
         reason: op.reason || "Ranked by the Opportunity Intelligence Engine.",
-        missingSkills: op.missingSkills || mockCareerTwin.opportunities[0].missingSkills,
+        missingSkills: op.missingSkills || roleFallback.opportunities[0].missingSkills,
         location: op.location || filters.location,
         salary: op.salary || "Not disclosed",
         postedDate: op.postedDate || "Last 10 days",
@@ -551,8 +570,8 @@ export function OpportunityRadar() {
         deadline: op.deadline || "Rolling",
         impact: op.estimatedCareerImpact || op.impact || "+4 Career Score",
         recommendedAction: op.recommendedAction || `Complete ${currentTwin.recommendedProject.title}.`,
-        prepQuestions: op.prepQuestions || mockCareerTwin.opportunities[0].prepQuestions,
-        prepPlan: op.prepPlan || mockCareerTwin.opportunities[0].prepPlan,
+        prepQuestions: op.prepQuestions || roleFallback.opportunities[0].prepQuestions,
+        prepPlan: op.prepPlan || roleFallback.opportunities[0].prepPlan,
         afterProject: op.afterProject || { match: Math.min(99, numberFrom(op.matchScore ?? op.match, 80) + 5), careerScore: currentTwin.careerScore + 7, salary: currentTwin.futurePrediction.salary }
       }));
       setLiveMode(data.liveMode === "demo" ? "Live Intelligence Mode" : "Live Intelligence Mode");
@@ -567,6 +586,7 @@ export function OpportunityRadar() {
 
   return (
     <div className="grid gap-5">
+      <TargetRoleBadge twin={currentTwin} />
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -577,7 +597,7 @@ export function OpportunityRadar() {
           <Button onClick={refreshRadar} disabled={scanning}>{scanning ? "Scanning..." : "Refresh Intelligence"}</Button>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <input className="rounded-2xl border-[4px] border-ink bg-white p-3 font-black" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })} />
+          <input className="rounded-2xl border-[4px] border-ink bg-white p-3 font-black" value={filters.role || targetRole} onChange={(e) => setFilters({ ...filters, role: e.target.value })} />
           <input className="rounded-2xl border-[4px] border-ink bg-white p-3 font-black" value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} />
           <select className="rounded-2xl border-[4px] border-ink bg-white p-3 font-black" value={filters.platform} onChange={(e) => setFilters({ ...filters, platform: e.target.value })}><option>All</option>{Array.from(new Set(currentTwin.opportunities.map((op) => op.sourcePlatform || "Tavily Intelligence"))).map((item) => <option key={item}>{item}</option>)}</select>
           <select className="rounded-2xl border-[4px] border-ink bg-white p-3 font-black" value={filters.posted} onChange={(e) => setFilters({ ...filters, posted: e.target.value })}><option>Last 24 Hours</option><option>Last 3 Days</option><option>Last 7 Days</option><option>Last 10 Days</option></select>
@@ -615,7 +635,7 @@ export function OpportunityRadar() {
           <div className="mt-4 grid gap-3 md:grid-cols-3"><Metric title="Salary" value={active.salary || "N/A"} note={active.location || "Location"} color="bg-yellow" /><Metric title="Posted" value={active.postedDate || "Recent"} note={active.sourcePlatform || "Source"} color="bg-white" /><Metric title="Impact" value={active.impact} note="Career gain" color="bg-orange text-white" /></div>
           <p className="mt-5 text-lg font-extrabold text-slate-700">{active.reason}</p>
           <p className="mt-3 font-black">AI Explanation</p>
-          <p className="font-bold text-slate-700">Your AI multi-agent and backend architecture direction make you suitable. The fastest unlock is adding production deployment proof through {currentTwin.recommendedProject.title}.</p>
+          <p className="font-bold text-slate-700">Your profile is being ranked specifically for {targetRole}. The fastest unlock is adding role-specific proof through {currentTwin.recommendedProject.title}.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a href={active.applyLink || "#"} target="_blank" rel="noreferrer"><Button>Apply Now</Button></a>
             <a href={active.applyLink || "#"} target="_blank" rel="noreferrer"><Button>Open Company</Button></a>

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { activitySeed } from "@/lib/app-data";
-import { CareerTwin, mockCareerTwin } from "@/lib/career-twin";
+import { CareerTwin, generateFallbackCareerTwin } from "@/lib/career-twin";
 import { AgentRun, CareerTwinContext, ExecutionLog, scanSteps } from "@/lib/career-ui";
 
 const Dashboard = lazy(() => import("@/components/pages/career-pages").then((mod) => ({ default: mod.Dashboard })));
@@ -58,9 +58,11 @@ function numberFrom(value: unknown, fallback = 0) {
   return fallback;
 }
 
-function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extractedSkills?: string[]; github?: unknown; market?: unknown[] } = {}): CareerTwin {
-  const strengths = Array.isArray(raw?.strengths) ? raw.strengths : mockCareerTwin.strengths;
-  const weaknesses = Array.isArray(raw?.weaknesses) ? raw.weaknesses : raw?.missingSkills || mockCareerTwin.weaknesses;
+function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extractedSkills?: string[]; github?: unknown; market?: unknown[]; targetRole?: string } = {}): CareerTwin {
+  const targetRole = raw?.targetRole || extras.targetRole || "Software Developer";
+  const roleFallback = generateFallbackCareerTwin(targetRole);
+  const strengths = Array.isArray(raw?.strengths) ? raw.strengths : roleFallback.strengths;
+  const weaknesses = Array.isArray(raw?.weaknesses) ? raw.weaknesses : raw?.missingSkills || roleFallback.weaknesses;
   const skillNames = Array.from(new Set([...(extras.extractedSkills || []), ...strengths, ...weaknesses]));
   const skills = Array.isArray(raw?.skills)
     ? raw.skills.map((skill: any) => ({
@@ -73,22 +75,23 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
         name,
         score: weaknesses.includes(name) ? 32 : 78,
         missing: weaknesses.includes(name),
-        recommendation: weaknesses.includes(name) ? `Build ${raw?.recommendedProject?.title || mockCareerTwin.recommendedProject.title}.` : `Use ${name} as profile evidence.`
+        recommendation: weaknesses.includes(name) ? `Build ${raw?.recommendedProject?.title || roleFallback.recommendedProject.title}.` : `Use ${name} as profile evidence.`
       }));
 
-  const project = raw?.recommendedProject || mockCareerTwin.recommendedProject;
-  const fallbackProject = mockCareerTwin.recommendedProject;
-  const future = raw?.futurePrediction || mockCareerTwin.futurePrediction;
-  const opportunities = Array.isArray(raw?.opportunities) ? raw.opportunities : mockCareerTwin.opportunities;
+  const project = raw?.recommendedProject || roleFallback.recommendedProject;
+  const fallbackProject = roleFallback.recommendedProject;
+  const future = raw?.futurePrediction || roleFallback.futurePrediction;
+  const opportunities = Array.isArray(raw?.opportunities) ? raw.opportunities : roleFallback.opportunities;
   const roadmap = Array.isArray(raw?.weeklyRoadmap) ? raw.weeklyRoadmap : [];
 
   return {
-    careerScore: numberFrom(raw?.careerScore, mockCareerTwin.careerScore),
+    targetRole,
+    careerScore: numberFrom(raw?.careerScore, roleFallback.careerScore),
     strengths,
     weaknesses,
     skills,
     recommendedProject: {
-      title: project.title || mockCareerTwin.recommendedProject.title,
+      title: project.title || roleFallback.recommendedProject.title,
       reason: project.reason || fallbackProject.reason,
       techStack: Array.isArray(project.techStack) ? project.techStack : fallbackProject.techStack,
       timeline: project.timeline || `${Math.max(1, roadmap.length)} weeks`,
@@ -109,17 +112,17 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
       linkedInPost: project.linkedInPost || fallbackProject.linkedInPost
     },
     futurePrediction: {
-      salary: future.salary || mockCareerTwin.futurePrediction.salary,
-      careerScore: numberFrom(future.careerScore, mockCareerTwin.futurePrediction.careerScore),
-      interviewProbability: numberFrom(future.interviewProbability, mockCareerTwin.futurePrediction.interviewProbability),
-      marketPosition: future.marketPosition || raw?.marketAlignment || mockCareerTwin.futurePrediction.marketPosition
+      salary: future.salary || roleFallback.futurePrediction.salary,
+      careerScore: numberFrom(future.careerScore, roleFallback.futurePrediction.careerScore),
+      interviewProbability: numberFrom(future.interviewProbability, roleFallback.futurePrediction.interviewProbability),
+      marketPosition: future.marketPosition || raw?.marketAlignment || roleFallback.futurePrediction.marketPosition
     },
     opportunities: opportunities.map((op: any) => ({
       title: op.title || "Opportunity",
       company: op.company || "AI Startup",
       match: numberFrom(op.matchScore ?? op.match, 75),
       reason: op.reason || "Ranked by Career Twin.",
-      missingSkills: Array.isArray(op.missingSkills) ? op.missingSkills : mockCareerTwin.opportunities[0].missingSkills,
+      missingSkills: Array.isArray(op.missingSkills) ? op.missingSkills : roleFallback.opportunities[0].missingSkills,
       location: op.location || "Remote / India",
       salary: op.salary || "Not disclosed",
       postedDate: op.postedDate || op.posted || "Last 10 days",
@@ -127,22 +130,22 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
       applyLink: op.applyLink || op.url || "#",
       deadline: op.deadline || "Rolling",
       impact: op.impact || op.estimatedCareerImpact || op.careerImpact || "+3 Career Score",
-      recommendedAction: op.recommendedAction || `Complete ${project.title || mockCareerTwin.recommendedProject.title}.`,
-      prepQuestions: Array.isArray(op.prepQuestions) ? op.prepQuestions : mockCareerTwin.opportunities[0].prepQuestions,
-      prepPlan: Array.isArray(op.prepPlan) ? op.prepPlan : mockCareerTwin.opportunities[0].prepPlan,
-      afterProject: op.afterProject || { match: Math.min(99, numberFrom(op.matchScore ?? op.match, 75) + 5), careerScore: Math.min(100, numberFrom(raw?.careerScore, 81) + 7), salary: future.salary || mockCareerTwin.futurePrediction.salary }
+      recommendedAction: op.recommendedAction || `Complete ${project.title || roleFallback.recommendedProject.title}.`,
+      prepQuestions: Array.isArray(op.prepQuestions) ? op.prepQuestions : roleFallback.opportunities[0].prepQuestions,
+      prepPlan: Array.isArray(op.prepPlan) ? op.prepPlan : roleFallback.opportunities[0].prepPlan,
+      afterProject: op.afterProject || { match: Math.min(99, numberFrom(op.matchScore ?? op.match, 75) + 5), careerScore: Math.min(100, numberFrom(raw?.careerScore, roleFallback.careerScore) + 7), salary: future.salary || roleFallback.futurePrediction.salary }
     })),
     timeline: Array.isArray(raw?.timeline) && raw.timeline.length
       ? raw.timeline
       : [
-          { year: "Now", title: `Career Score ${numberFrom(raw?.careerScore, mockCareerTwin.careerScore)}`, description: "AI Twin initialized from resume, GitHub, market, and OpenAI analysis.", predicted: false },
+          { year: "Now", title: `Career Score ${numberFrom(raw?.careerScore, roleFallback.careerScore)}`, description: "AI Twin initialized from resume, GitHub, market, and OpenAI analysis.", predicted: false },
           ...roadmap.slice(0, 3).map((item: string, index: number) => ({ year: `Week ${index + 1}`, title: item, description: "Execution roadmap generated by the Career Twin.", predicted: false })),
-          { year: "12 Months", title: "Predicted role acceleration", description: `${future.salary || mockCareerTwin.futurePrediction.salary} with ${numberFrom(future.interviewProbability, 81)}% interview probability.`, predicted: true }
+          { year: "12 Months", title: targetRole, description: `${future.salary || roleFallback.futurePrediction.salary} with ${numberFrom(future.interviewProbability, 81)}% interview probability.`, predicted: true }
         ],
     activityFeed: logs.map((entry) => ({ time: entry.time, message: entry.message, type: "agent" })),
     githubData: extras.github,
     marketData: extras.market
-  };
+  } as CareerTwin;
 }
 
 export default function Home() {
@@ -155,7 +158,7 @@ export default function Home() {
   const [executionLogs, setExecutionLogs] = useState<ExecutionLog[]>([]);
   const [future, setFuture] = useState(55);
   const [feed, setFeed] = useState(activitySeed.slice(0, 4));
-  const { register, handleSubmit } = useForm({ defaultValues: { githubUsername: "", targetRole: "Backend AI Engineer", linkedInUrl: "", resume: undefined } });
+  const { register, handleSubmit, setValue, watch } = useForm({ defaultValues: { githubUsername: "", targetRole: "", linkedInUrl: "", resume: undefined } });
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -225,7 +228,7 @@ export default function Home() {
       const market = await checkedJson("/api/market-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: `${parsed.data.targetRole} AI internships hackathons fellowships backend jobs` })
+        body: JSON.stringify({ targetRole: parsed.data.targetRole })
       });
       const marketCount = Array.isArray(market.results) ? market.results.length : 0;
       updateAgent(1, { status: "Completed", progress: 100, task: "Market scan complete", result: `Found ${marketCount} live market signals` });
@@ -271,13 +274,13 @@ export default function Home() {
       addLog("Execution Agent started...");
       addLog("Building personalized weekly roadmap...");
       addLog("Career Twin Complete.");
-      const nextTwin = normalizeCareerTwin(data, localLogs, { extractedSkills, github, market: market.results });
+      const nextTwin = normalizeCareerTwin(data, localLogs, { extractedSkills, github, market: market.results, targetRole: parsed.data.targetRole });
       updateAgent(5, { status: "Completed", progress: 100, task: "Career Twin complete", result: `Career score ${nextTwin.careerScore}` });
       setTwin(nextTwin);
       setActive("Opportunity Unlock Lab");
     } catch {
       addLog("External API degraded. Continuity intelligence loaded.");
-      const fallback = normalizeCareerTwin(mockCareerTwin, localLogs);
+      const fallback = normalizeCareerTwin(generateFallbackCareerTwin(parsed.data.targetRole), localLogs, { targetRole: parsed.data.targetRole });
       setTwin(fallback);
       setAgentRuns((items) => items.map((item) => ({ ...item, status: "Completed", progress: 100, result: item.result === "No run yet" ? "Completed through continuity intelligence" : item.result })));
       setActive("Opportunity Unlock Lab");
@@ -334,7 +337,7 @@ export default function Home() {
             <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .28 }}>
               <Suspense fallback={<div className="rounded-2xl border-[4px] border-ink bg-white p-5 font-black">Loading intelligence workspace...</div>}>
                 {active === "Dashboard" && <Dashboard />}
-                {active === "AI Twin Scan" && <TwinScan register={register} submit={handleSubmit(runScan)} />}
+                {active === "AI Twin Scan" && <TwinScan register={register} submit={handleSubmit(runScan)} setValue={setValue} targetRole={watch("targetRole")} />}
                 {active === "Agent Control Center" && <AgentCenter />}
                 {active === "Career Score" && <CareerScore />}
                 {active === "Skill Map" && <SkillMap />}

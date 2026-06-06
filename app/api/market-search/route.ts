@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { tavilySearch } from "@/lib/server";
-import { mockCareerTwin } from "@/lib/career-twin";
+import { generateFallbackCareerTwin } from "@/lib/career-twin";
 
 export async function POST(request: Request) {
+  let targetRole = "Software Developer";
   try {
-    const { query } = await request.json();
-    if (!query) throw new Error("Search query is required.");
+    const body = await request.json();
+    targetRole = body.targetRole || body.query || targetRole;
+    const query = `${targetRole} jobs required skills India 2025 ${targetRole} developer hiring`;
     return NextResponse.json({ results: await tavilySearch(query) });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Market search failed.", fallback: true, results: mockCareerTwin.opportunities }, { status: 200 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Market search failed.", fallback: true, results: generateFallbackCareerTwin(targetRole).opportunities }, { status: 200 });
   }
 }

@@ -203,3 +203,121 @@ export const mockCareerTwin: CareerTwin = {
   ],
   activityFeed: []
 };
+
+export function generateFallbackCareerTwin(targetRole = "Software Developer"): CareerTwin {
+  const role = targetRole || "Software Developer";
+  const key = role.toLowerCase();
+  const profile = key.includes("frontend")
+    ? {
+        careerScore: 74,
+        strengths: ["JavaScript", "HTML/CSS", "UI fundamentals"],
+        weaknesses: ["TypeScript", "Next.js", "Performance optimization", "Testing"],
+        skills: [
+          { name: "React", score: 72, missing: false, recommendation: "Build production React interfaces with state, routing, and reusable components." },
+          { name: "TypeScript", score: 45, missing: true, recommendation: "Convert a React project to strict TypeScript." },
+          { name: "Next.js", score: 30, missing: true, recommendation: "Ship a Next.js app with SSR, routing, and API integration." },
+          { name: "Testing", score: 20, missing: true, recommendation: "Add unit and E2E tests to your best frontend project." }
+        ],
+        project: {
+          title: "Realtime Design System Workbench",
+          reason: `A ${role} portfolio needs visible proof of React, Next.js, TypeScript, performance, accessibility, and polished UI engineering.`,
+          pitch: "A production-grade frontend platform for building, previewing, testing, and documenting reusable UI components.",
+          techStack: ["Next.js", "React", "TypeScript", "TailwindCSS", "Storybook", "Playwright"],
+          timeline: "21 days",
+          careerGain: "+8"
+        },
+        opportunity: `${role} Intern`
+      }
+    : key.includes("ml") || key.includes("data scientist")
+      ? {
+          careerScore: 81,
+          strengths: ["Python", "Model training", "Data analysis"],
+          weaknesses: ["MLOps", "Model deployment", "Feature pipelines", "Experiment tracking"],
+          skills: [
+            { name: "Python", score: 88, missing: false, recommendation: "Use Python as the anchor in every ML project explanation." },
+            { name: "PyTorch", score: 72, missing: false, recommendation: "Publish a trained model with reproducible experiments." },
+            { name: "MLOps", score: 30, missing: true, recommendation: "Add MLflow tracking and deployment automation." },
+            { name: "Model Deployment", score: 32, missing: true, recommendation: "Ship an inference API with monitoring." }
+          ],
+          project: {
+            title: "Production ML Monitoring Pipeline",
+            reason: `A ${role} profile needs deployment, monitoring, drift detection, and reproducible training proof.`,
+            pitch: "An end-to-end ML system that trains, serves, monitors, and retrains models from real data.",
+            techStack: ["Python", "PyTorch", "FastAPI", "MLflow", "Docker", "PostgreSQL"],
+            timeline: "28 days",
+            careerGain: "+9"
+          },
+          opportunity: `${role} Internship`
+        }
+      : key.includes("devops")
+        ? {
+            careerScore: 76,
+            strengths: ["Linux basics", "Scripting", "Cloud fundamentals"],
+            weaknesses: ["Kubernetes", "Terraform", "CI/CD", "Observability"],
+            skills: [
+              { name: "Docker", score: 62, missing: false, recommendation: "Containerize and document a production deployment flow." },
+              { name: "Kubernetes", score: 28, missing: true, recommendation: "Deploy a multi-service app to Kubernetes." },
+              { name: "Terraform", score: 24, missing: true, recommendation: "Provision cloud infrastructure with Terraform modules." },
+              { name: "CI/CD", score: 36, missing: true, recommendation: "Build GitHub Actions pipelines with tests and deploys." }
+            ],
+            project: {
+              title: "Cloud CI/CD Deployment Control Plane",
+              reason: `A ${role} portfolio needs infrastructure, automation, Kubernetes, Terraform, and monitoring proof.`,
+              pitch: "A deployment platform that provisions infrastructure, runs CI/CD, and monitors release health.",
+              techStack: ["Docker", "Kubernetes", "Terraform", "GitHub Actions", "Prometheus", "Grafana"],
+              timeline: "28 days",
+              careerGain: "+9"
+            },
+            opportunity: `${role} Engineer`
+          }
+        : {
+            careerScore: 78,
+            strengths: ["API fundamentals", "Database basics", "System thinking"],
+            weaknesses: ["Docker", "Redis", "System Design", "Production APIs"],
+            skills: mockCareerTwin.skills,
+            project: mockCareerTwin.recommendedProject,
+            opportunity: role
+          };
+
+  const project = {
+    ...mockCareerTwin.recommendedProject,
+    ...profile.project,
+    prd: {
+      problemStatement: `${role} candidates need portfolio proof that matches real hiring expectations, not unrelated side projects.`,
+      goal: `Build a polished ${role} proof project that closes the most important role-specific gaps.`,
+      targetUsers: ["Hiring teams", "Recruiters", "Technical interviewers"],
+      coreFeatures: ["Role-specific core workflow", "Production-quality implementation", "Testing and documentation", "Deployable demo"],
+      successMetrics: ["Clear recruiter signal", "Complete README", "Live demo", "Role-specific skills demonstrated"]
+    },
+    systemDesign: key.includes("frontend")
+      ? ["Next.js App", "Component System", "State Layer", "API Integration", "Testing Suite", "Vercel Deployment"]
+      : key.includes("ml") || key.includes("data scientist")
+        ? ["Data Source", "Training Pipeline", "Experiment Tracking", "Inference API", "Monitoring", "Model Registry"]
+        : key.includes("devops")
+          ? ["GitHub Actions", "Terraform", "Cloud Runtime", "Kubernetes", "Observability", "Rollback Flow"]
+          : mockCareerTwin.recommendedProject.systemDesign,
+    recruiterSignals: key.includes("frontend")
+      ? ["React Architecture", "Responsive UI", "Accessibility", "Performance", "Testing", "Product Polish"]
+      : key.includes("ml") || key.includes("data scientist")
+        ? ["Model Training", "MLOps", "Deployment", "Monitoring", "Experiment Tracking", "Data Pipelines"]
+        : key.includes("devops")
+          ? ["Infrastructure as Code", "CI/CD", "Kubernetes", "Cloud Deployment", "Observability", "Reliability"]
+          : mockCareerTwin.recommendedProject.recruiterSignals
+  };
+  return {
+    targetRole: role,
+    ...mockCareerTwin,
+    careerScore: profile.careerScore,
+    strengths: profile.strengths,
+    weaknesses: profile.weaknesses,
+    skills: profile.skills,
+    recommendedProject: project,
+    opportunities: mockCareerTwin.opportunities.map((op) => ({
+      ...op,
+      title: profile.opportunity,
+      reason: `Ranked for the selected target role: ${role}.`,
+      recommendedAction: `Build ${project.title} before applying.`
+    })),
+    timeline: mockCareerTwin.timeline.map((item) => item.predicted ? { ...item, title: role, description: `Predicted progression toward ${role}.` } : item)
+  } as CareerTwin;
+}
