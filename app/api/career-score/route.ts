@@ -7,6 +7,6 @@ export async function POST(request: Request) {
     const twin = await buildTwin(body);
     return NextResponse.json({ careerScore: twin.careerScore });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Career score calculation failed." }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Career score calculation failed.", fallback: true }, { status: 200 });
   }
 }

@@ -5,9 +5,9 @@ import { mockCareerTwin } from "@/lib/career-twin";
 export async function POST(request: Request) {
   try {
     const { query } = await request.json();
-    if (!query) return NextResponse.json({ error: "Search query is required." }, { status: 400 });
+    if (!query) throw new Error("Search query is required.");
     return NextResponse.json({ results: await tavilySearch(query) });
-  } catch {
-    return NextResponse.json({ results: mockCareerTwin.opportunities });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Market search failed.", fallback: true, results: mockCareerTwin.opportunities }, { status: 200 });
   }
 }

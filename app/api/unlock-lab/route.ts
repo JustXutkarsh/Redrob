@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       };
     }));
     return NextResponse.json({ resources });
-  } catch {
-    return NextResponse.json({ resources: fallback });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unlock lab resource search failed", fallback: true, resources: fallback }, { status: 200 });
   }
 }

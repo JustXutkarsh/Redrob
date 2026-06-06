@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "app/api/build-career-twin/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/opportunity-radar/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/analyze-resume/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/generate-project/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}
