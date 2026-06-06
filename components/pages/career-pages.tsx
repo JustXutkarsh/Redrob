@@ -54,6 +54,10 @@ function Metric({ title, value, note, color }: any) {
   return <Card className={color}><p className="font-black text-slate-700">{title}</p><motion.strong className="block text-6xl font-black">{value}</motion.strong><p className="font-extrabold">{note}</p></Card>;
 }
 
+function CompactMetric({ title, value, note, color }: any) {
+  return <div className={`min-w-0 rounded-[24px] border-[4px] border-ink p-4 shadow-brutalSm ${color}`}><p className="font-black text-slate-700">{title}</p><strong className="mt-2 block break-words text-[clamp(2rem,4vw,3rem)] font-black leading-none">{value}</strong><p className="mt-2 break-words font-extrabold">{note}</p></div>;
+}
+
 function ActivityFeed() {
   const { twin } = useCareerTwin();
   if (!twin) return <EmptyState title="Activity feed starts after your AI Twin Scan." />;
@@ -575,7 +579,7 @@ export function OpportunityRadar() {
         salary: op.salary || "Not disclosed",
         postedDate: op.postedDate || "Last 10 days",
         sourcePlatform: op.sourcePlatform || "Tavily Intelligence",
-        applyLink: op.applyLink || "#",
+        applyLink: op.applyLink || op.url || op.link || "#",
         deadline: op.deadline || "Rolling",
         impact: op.estimatedCareerImpact || op.impact || "+4 Career Score",
         recommendedAction: op.recommendedAction || `Complete ${currentTwin.recommendedProject.title}.`,
@@ -636,18 +640,18 @@ export function OpportunityRadar() {
           </div>
         </Card>
 
-        <Card>
+        <Card className="min-w-0 overflow-hidden">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h3 className="text-4xl font-black">{active.title}</h3><p className="text-2xl font-black text-orange">{active.company}</p></div>
-            <Badge className="bg-cyan text-2xl">{active.match}% Match</Badge>
+            <div className="min-w-0"><h3 className="break-words text-4xl font-black">{active.title}</h3><p className="break-words text-2xl font-black text-orange">{active.company}</p></div>
+            <Badge className="shrink-0 bg-cyan text-2xl">{active.match}% Match</Badge>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3"><Metric title="Salary" value={active.salary || "N/A"} note={active.location || "Location"} color="bg-yellow" /><Metric title="Posted" value={active.postedDate || "Recent"} note={active.sourcePlatform || "Source"} color="bg-white" /><Metric title="Impact" value={active.impact} note="Career gain" color="bg-orange text-white" /></div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3"><CompactMetric title="Salary" value={active.salary || "N/A"} note={active.location || "Location"} color="bg-yellow" /><CompactMetric title="Posted" value={active.postedDate || "Recent"} note={active.sourcePlatform || "Source"} color="bg-white" /><CompactMetric title="Impact" value={active.impact} note="Career gain" color="bg-orange text-white" /></div>
           <p className="mt-5 text-lg font-extrabold text-slate-700">{active.reason}</p>
           <p className="mt-3 font-black">AI Explanation</p>
           <p className="font-bold text-slate-700">Your profile is being ranked specifically for {targetRole}. The fastest unlock is adding role-specific proof through {currentTwin.recommendedProject.title}.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a href={active.applyLink || "#"} target="_blank" rel="noreferrer"><Button>Apply Now</Button></a>
-            <a href={active.applyLink || "#"} target="_blank" rel="noreferrer"><Button>Open Company</Button></a>
+            <a href={active.applyLink || "#"} target="_blank" rel="noreferrer"><Button>Open Job</Button></a>
             <Button onClick={() => setFeed((items) => [`${timestamp()} Saved ${active.company}.`, ...items])}>Save Opportunity</Button>
             <Button onClick={() => setFeed((items) => [`${timestamp()} Generated prep plan for ${active.title}.`, ...items])}>Generate Preparation Plan</Button>
             <Button onClick={() => setFeed((items) => [`${timestamp()} Interview questions ready.`, ...items])}>Generate Interview Questions</Button>
