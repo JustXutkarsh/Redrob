@@ -5,7 +5,6 @@ import { mockCareerTwin } from "@/lib/career-twin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (process.env.DEMO_MODE === "true") return NextResponse.json({ fallback: true, project: mockCareerTwin.recommendedProject });
     const twin = await buildTwin(body);
     return NextResponse.json({ project: twin.recommendedProject });
   } catch (error) {

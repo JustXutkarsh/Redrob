@@ -5,7 +5,6 @@ import { mockCareerTwin } from "@/lib/career-twin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (process.env.DEMO_MODE === "true") return NextResponse.json({ ...mockCareerTwin, fallback: true });
     if (!body.resumeText || !body.github || !body.market || !body.targetRole) throw new Error("Resume text, GitHub profile, market data, and target role are required.");
     return NextResponse.json(await buildTwin(body));
   } catch (error) {

@@ -31,7 +31,6 @@ const scanSchema = z.object({
 });
 
 const pages = ["Dashboard", "AI Twin Scan", "Agent Control Center", "Career Score", "Skill Map", "Opportunity Unlock Lab", "Project Generator", "Opportunity Radar", "Career Timeline"];
-const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "false" || process.env.DEMO_MODE === "false" ? false : true;
 const agentPipeline = [
   ["Skill Agent", "Waiting for resume"],
   ["Market Agent", "Waiting for target role"],
@@ -147,8 +146,8 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
 }
 
 export default function Home() {
-  const [active, setActive] = useState(demoMode ? "Opportunity Unlock Lab" : "AI Twin Scan");
-  const [twin, setTwin] = useState<CareerTwin | null>(() => demoMode ? normalizeCareerTwin(mockCareerTwin, []) : null);
+  const [active, setActive] = useState("AI Twin Scan");
+  const [twin, setTwin] = useState<CareerTwin | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [scanError, setScanError] = useState("");
@@ -157,13 +156,6 @@ export default function Home() {
   const [future, setFuture] = useState(55);
   const [feed, setFeed] = useState(activitySeed.slice(0, 4));
   const { register, handleSubmit } = useForm({ defaultValues: { githubUsername: "", targetRole: "Backend AI Engineer", linkedInUrl: "", resume: undefined } });
-
-  useEffect(() => {
-    if (demoMode && !twin) {
-      setTwin(normalizeCareerTwin(mockCareerTwin, []));
-      setActive("Opportunity Unlock Lab");
-    }
-  }, [twin]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

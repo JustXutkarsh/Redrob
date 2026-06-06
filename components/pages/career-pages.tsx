@@ -21,13 +21,14 @@ export function FloatingCards() {
   );
 }
 
-export function EmptyState({ title = "Run a real AI Twin scan first." }: { title?: string }) {
-  return <Card><h3 className="text-3xl font-black">{title}</h3><p className="mt-3 font-extrabold text-slate-700">Upload a resume PDF, enter a GitHub username, and choose a target role to generate live results.</p></Card>;
+export function EmptyState({ title = "Do your resume scan on AI Twin Scan first." }: { title?: string }) {
+  const { navigate } = useCareerTwin();
+  return <Card className="bg-[#fffaf0]"><h3 className="text-3xl font-black">{title}</h3><p className="mt-3 font-extrabold text-slate-700">Upload your resume PDF, enter GitHub, add LinkedIn, and choose a target role. Dashboard, score, opportunities, projects, and timeline will unlock only after that scan.</p><Button className="mt-5" onClick={() => navigate("AI Twin Scan")}>Go to AI Twin Scan</Button></Card>;
 }
 
 export function Dashboard() {
   const { twin } = useCareerTwin();
-  if (!twin) return <div className="grid gap-5 lg:grid-cols-[1fr_360px]"><EmptyState /><ActivityFeed /></div>;
+  if (!twin) return <EmptyState title="Dashboard unlocks after your AI Twin Scan." />;
   return <div className="grid gap-5"><div className="grid gap-5 md:grid-cols-3"><Metric title="Career Score" value={twin.careerScore} note="From CareerTwin" color="bg-cyan" /><Metric title="Market Position" value={twin.futurePrediction.marketPosition} note="Market alignment" color="bg-yellow" /><Metric title="AI Prediction" value={twin.futurePrediction.careerScore} note="12-month score" color="bg-orange text-white" /></div><div className="grid gap-5 lg:grid-cols-[1fr_360px]"><Card><h3 className="text-3xl font-black">Today's Priorities</h3><div className="mt-5 grid gap-3">{twin.timeline.slice(1, 4).map((x) => <div key={x.title} className="flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-[#fffaf0] p-4 font-black"><Check className="text-success" />{x.title}</div>)}</div></Card><ActivityFeed /></div></div>;
 }
 
@@ -37,7 +38,8 @@ function Metric({ title, value, note, color }: any) {
 
 function ActivityFeed() {
   const { twin } = useCareerTwin();
-  const feed = twin?.activityFeed.length ? twin.activityFeed : activitySeed.map((message, index) => ({ time: `10:${31 + index}`, message, type: "system" }));
+  if (!twin) return <EmptyState title="Activity feed starts after your AI Twin Scan." />;
+  const feed = twin.activityFeed.length ? twin.activityFeed : activitySeed.map((message, index) => ({ time: `10:${31 + index}`, message, type: "system" }));
   return <Card><h3 className="mb-4 flex items-center gap-2 text-2xl font-black"><Activity /> Recent AI Activity</h3><div className="flex flex-col gap-3">{feed.map((item, i) => <motion.div key={`${item.time}-${item.message}-${i}`} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="rounded-2xl border-[3px] border-ink bg-white p-3 font-black"><span className="mr-3 text-orange">{item.time}</span>{item.message}</motion.div>)}</div></Card>;
 }
 
@@ -379,26 +381,27 @@ export function ProjectGenerator() {
 
 export function OpportunityUnlockLab() {
   const { twin, setLogs, navigate } = useCareerTwin();
-  const currentTwin = twin || mockCareerTwin;
+  const currentTwin = twin;
   const [scenario, setScenario] = useState("Build Recommended Project");
   const [selectedJob, setSelectedJob] = useState(0);
   const [resources, setResources] = useState<any[]>([]);
   const [mentorPrompt, setMentorPrompt] = useState("How should I structure this repository?");
   const [mentorAnswer, setMentorAnswer] = useState("");
   const [mentorLoading, setMentorLoading] = useState(false);
-  const blocking = currentTwin.skills.filter((skill) => skill.missing).slice(0, 4);
-  const gaps = blocking.length ? blocking : currentTwin.weaknesses.slice(0, 3).map((name) => ({ name, score: 30, missing: true, recommendation: `Build proof for ${name}.` }));
-  const currentMatch = Math.max(70, Math.min(92, (currentTwin.opportunities[0]?.match || 92) - 8));
+  const blocking = currentTwin?.skills.filter((skill) => skill.missing).slice(0, 4) || [];
+  const gaps = currentTwin ? (blocking.length ? blocking : currentTwin.weaknesses.slice(0, 3).map((name) => ({ name, score: 30, missing: true, recommendation: `Build proof for ${name}.` }))) : [];
+  const currentMatch = currentTwin ? Math.max(70, Math.min(92, (currentTwin.opportunities[0]?.match || 92) - 8)) : 0;
   const plans: Record<string, { score: number; interviews: number; opportunities: number; match: number }> = {
-    "Build Recommended Project": { score: currentTwin.careerScore + 7, interviews: 83, opportunities: 23, match: currentMatch + 13 },
-    "Learn Docker Only": { score: currentTwin.careerScore + 1, interviews: 66, opportunities: 6, match: currentMatch + 4 },
-    "Win Hackathon": { score: currentTwin.careerScore + 5, interviews: 76, opportunities: 14, match: currentMatch + 9 },
-    "Contribute to Open Source": { score: currentTwin.careerScore + 4, interviews: 72, opportunities: 11, match: currentMatch + 7 },
-    "Custom Action": { score: currentTwin.careerScore + 3, interviews: 70, opportunities: 9, match: currentMatch + 6 }
+    "Build Recommended Project": { score: (currentTwin?.careerScore || 0) + 7, interviews: 83, opportunities: 23, match: currentMatch + 13 },
+    "Learn Docker Only": { score: (currentTwin?.careerScore || 0) + 1, interviews: 66, opportunities: 6, match: currentMatch + 4 },
+    "Win Hackathon": { score: (currentTwin?.careerScore || 0) + 5, interviews: 76, opportunities: 14, match: currentMatch + 9 },
+    "Contribute to Open Source": { score: (currentTwin?.careerScore || 0) + 4, interviews: 72, opportunities: 11, match: currentMatch + 7 },
+    "Custom Action": { score: (currentTwin?.careerScore || 0) + 3, interviews: 70, opportunities: 9, match: currentMatch + 6 }
   };
   const impact = plans[scenario];
 
   useEffect(() => {
+    if (!currentTwin) return;
     let alive = true;
     fetch("/api/unlock-lab", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skills: gaps.map((skill) => skill.name) }) })
       .then((response) => response.json())
@@ -406,6 +409,8 @@ export function OpportunityUnlockLab() {
       .catch(() => alive && setResources([]));
     return () => { alive = false; };
   }, [gaps.map((skill) => skill.name).join("|")]);
+
+  if (!currentTwin) return <EmptyState title="Opportunity Unlock Lab unlocks after your AI Twin Scan." />;
 
   async function askMentor(prompt = mentorPrompt) {
     setMentorLoading(true);
@@ -511,18 +516,22 @@ export function OpportunityRadar() {
   const [liveMode, setLiveMode] = useState("Live Intelligence Mode");
   const [filters, setFilters] = useState({ role: "Backend AI Engineer", location: "India", remote: false, level: "Internship / Entry", salary: "Any", platform: "All", posted: "Last 10 Days" });
   const [feed, setFeed] = useState<string[]>(["Searching AI startups...", "Ranking opportunities.", "Detected Docker skill gap.", "Recommended portfolio project."]);
-  const sourceTwin = twin || mockCareerTwin;
+  const currentTwin = twin;
   useEffect(() => {
-    const timer = window.setInterval(() => setFeed((items) => [`${timestamp()} ${["Searching AI startups...", `Found ${sourceTwin.opportunities.length * 9 + 1} openings.`, "Ranking opportunities.", "Detected Docker skill gap.", "Unlocked high-fit opportunities."][items.length % 5]}`, ...items].slice(0, 7)), 2600);
+    if (!currentTwin) return;
+    const timer = window.setInterval(() => setFeed((items) => [`${timestamp()} ${["Searching AI startups...", `Found ${currentTwin.opportunities.length * 9 + 1} openings.`, "Ranking opportunities.", "Detected Docker skill gap.", "Unlocked high-fit opportunities."][items.length % 5]}`, ...items].slice(0, 7)), 2600);
     return () => window.clearInterval(timer);
-  }, [sourceTwin.opportunities.length]);
-  const currentTwin = sourceTwin;
+  }, [currentTwin?.opportunities.length]);
+
+  if (!currentTwin) return <EmptyState title="Opportunity Radar unlocks after your AI Twin Scan." />;
+
   const opportunities = currentTwin.opportunities.filter((op) => filters.platform === "All" || op.sourcePlatform === filters.platform);
   const active = opportunities[selected === null ? 0 : Math.min(selected, opportunities.length - 1)] || currentTwin.opportunities[0];
   const gaps = active.missingSkills || [];
   const after = active.afterProject || { match: Math.min(99, active.match + 5), careerScore: currentTwin.careerScore + 7, salary: currentTwin.futurePrediction.salary };
 
   async function refreshRadar() {
+    if (!currentTwin) return;
     setScanning(true);
     setFeed((items) => [`${timestamp()} Searching LinkedIn, Wellfound, RemoteOK, Internshala, Cutshort...`, ...items]);
     try {
