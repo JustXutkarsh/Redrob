@@ -41,9 +41,9 @@ export function useCareerTwin() {
   return value;
 }
 
-export const scanSteps = ["Scanning Resume...", "Reading GitHub...", "Analyzing Market...", "Building AI Twin...", "Generating Projects...", "Calculating Career Score..."];
+export const scanSteps = ["Scanning Resume...", "Reading Portfolio Signals...", "Analyzing Market...", "Building AI Twin...", "Generating Projects...", "Calculating Career Score..."];
 
-export const architectSteps = ["Analyzing Resume...", "Scanning GitHub...", "Checking Market Trends...", "Calculating Skill Gaps...", "Designing Product...", "Writing PRD...", "Generating Architecture...", "Finalizing Portfolio Strategy..."];
+export const architectSteps = ["Analyzing Resume...", "Reading Portfolio Signals...", "Checking Market Trends...", "Calculating Skill Gaps...", "Designing Product...", "Writing PRD...", "Generating Architecture...", "Finalizing Portfolio Strategy..."];
 
 export function timestamp() {
   return new Date().toLocaleTimeString("en-IN", { hour12: false });

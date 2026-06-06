@@ -67,7 +67,8 @@ Analyze the candidate ONLY for the selected targetRole in the user JSON.
 
 STRICT RULES:
 - First identify the targetRole.
-- Judge resume skills, GitHub repositories, LinkedIn URL/context, and market trends against that targetRole.
+- Judge resume skills, optional GitHub repositories, LinkedIn URL/context, and market trends against that targetRole.
+- If GitHub is missing or skipped, rely on resume, LinkedIn, targetRole, and market trends. Never penalize non-technical users just because GitHub is absent.
 - Strengths are only strengths if they help the targetRole.
 - Weaknesses and missing skills must be skills required for the targetRole, not generic gaps.
 - Recommended project MUST be a portfolio project for the targetRole.

@@ -23,7 +23,7 @@ export function FloatingCards() {
 
 export function EmptyState({ title = "Do your resume scan on AI Twin Scan first." }: { title?: string }) {
   const { navigate } = useCareerTwin();
-  return <Card className="bg-[#fffaf0]"><h3 className="text-3xl font-black">{title}</h3><p className="mt-3 font-extrabold text-slate-700">Upload your resume PDF, enter GitHub, add LinkedIn, and choose a target role. Dashboard, score, opportunities, projects, and timeline will unlock only after that scan.</p><Button className="mt-5" onClick={() => navigate("AI Twin Scan")}>Go to AI Twin Scan</Button></Card>;
+  return <Card className="bg-[#fffaf0]"><h3 className="text-3xl font-black">{title}</h3><p className="mt-3 font-extrabold text-slate-700">Upload your resume PDF, add LinkedIn if available, choose a target role, and optionally add GitHub. Dashboard, score, opportunities, projects, and timeline will unlock only after that scan.</p><Button className="mt-5" onClick={() => navigate("AI Twin Scan")}>Go to AI Twin Scan</Button></Card>;
 }
 
 const roleSuggestions = ["Frontend Developer", "Backend Developer", "Full Stack Developer", "ML Engineer", "Data Scientist", "DevOps Engineer", "AI Engineer", "Mobile Developer", "Product Manager"];
@@ -76,7 +76,7 @@ export function TwinScan({ register, submit, setValue, targetRole }: any) {
         <form onSubmit={submit} className="grid gap-5">
           <div className="rounded-[28px] border-[5px] border-ink bg-cyan p-5 shadow-brutalSm">
             <h3 className="text-4xl font-black">Start Here — Build Your AI Twin</h3>
-            <p className="mt-2 max-w-2xl font-extrabold text-slate-700">Upload your resume, connect GitHub, choose a dream role, and let six agents synthesize your career operating plan.</p>
+            <p className="mt-2 max-w-2xl font-extrabold text-slate-700">Upload your resume, add LinkedIn, choose a dream role, and optionally connect GitHub if you have technical projects.</p>
           </div>
 
           <label className="grid gap-2 font-black">
@@ -88,7 +88,7 @@ export function TwinScan({ register, submit, setValue, targetRole }: any) {
           </label>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <label className="grid gap-2 font-black">GitHub Username or URL<input {...register("githubUsername")} className="rounded-2xl border-[4px] border-ink bg-white p-4" placeholder="JustXutkarsh or github.com/JustXutkarsh" /></label>
+            <label className="grid gap-2 font-black">GitHub Username or URL <span className="text-sm text-slate-600">Optional</span><input {...register("githubUsername")} className="rounded-2xl border-[4px] border-ink bg-white p-4" placeholder="Optional for tech portfolios" /></label>
             <label className="grid gap-2 font-black">Target Role<input {...register("targetRole", { required: true })} className="rounded-2xl border-[4px] border-ink bg-white p-4" /></label>
           </div>
 
@@ -99,7 +99,7 @@ export function TwinScan({ register, submit, setValue, targetRole }: any) {
           <label className="grid gap-2 font-black">LinkedIn URL<input {...register("linkedInUrl")} className="rounded-2xl border-[4px] border-ink bg-white p-4" /></label>
 
           <div className="grid gap-3 md:grid-cols-3">
-            {["Resume Parser", "GitHub Reader", "Market Radar"].map((name, i) => (
+            {["Resume Parser", "Portfolio Reader", "Market Radar"].map((name, i) => (
               <div key={name} className={`rounded-2xl border-[3px] border-ink p-4 font-black ${isScanning && scanStep >= i ? "bg-cyan shadow-brutalSm" : "bg-white"}`}>
                 <div className="mb-2 flex items-center gap-2"><CircleDot className={isScanning && scanStep >= i ? "animate-pulse text-success" : ""} />{name}</div>
                 <p className="text-sm text-slate-700">{isScanning && scanStep >= i ? "Working" : "Standing by"}</p>
@@ -284,7 +284,7 @@ export function ProjectGenerator() {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {["Resume", "GitHub", "Market Trends", "Target Role", "Missing Skills"].map((item) => <Badge key={item} className="bg-white">{item}</Badge>)}
+          {["Resume", "LinkedIn", "Optional GitHub", "Market Trends", "Target Role", "Missing Skills"].map((item) => <Badge key={item} className="bg-white">{item}</Badge>)}
         </div>
       </Card>
 

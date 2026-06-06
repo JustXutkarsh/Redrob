@@ -5,7 +5,7 @@ import { fetchGithubProfile } from "@/lib/server";
 export async function POST(request: Request) {
   try {
     const { username } = await request.json();
-    if (!username) throw new Error("GitHub username is required.");
+    if (!username) return NextResponse.json({ skipped: true, repositories: [], user: null });
     return NextResponse.json(await fetchGithubProfile(username));
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
