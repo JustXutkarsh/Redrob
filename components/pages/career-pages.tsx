@@ -522,7 +522,7 @@ export function OpportunityUnlockLab() {
       </Card>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <Card><h3 className="mb-4 text-3xl font-black">Why This Works</h3><p className="text-lg font-extrabold text-slate-700">{gaps[0]?.name || "Production"} proof is currently missing from your GitHub for {getTargetRole(currentTwin)} roles. Recruiters use this as a filtering criterion. Building and publishing {currentTwin.recommendedProject.title} demonstrates the exact role-specific proof your target market expects.</p></Card>
+        <Card><h3 className="mb-4 text-3xl font-black">Why This Works</h3><p className="text-lg font-extrabold text-slate-700">{gaps[0]?.name || "Portfolio"} proof is currently missing from your profile for {getTargetRole(currentTwin)} roles. Recruiters use this as a filtering criterion. Building and publishing {currentTwin.recommendedProject.title} demonstrates the exact role-specific proof your target market expects.</p></Card>
         <Card><h3 className="mb-4 text-3xl font-black">Alternate Scenarios</h3><div className="grid gap-2">{Object.keys(plans).map((name) => <button key={name} onClick={() => setScenario(name)} className={`rounded-xl border-[3px] border-ink p-3 text-left font-black ${scenario === name ? "bg-cyan" : "bg-white"}`}>{name}</button>)}</div></Card>
       </div>
 

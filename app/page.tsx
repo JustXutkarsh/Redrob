@@ -58,6 +58,10 @@ function numberFrom(value: unknown, fallback = 0) {
   return fallback;
 }
 
+function isNonTechnicalRole(targetRole: string) {
+  return /marketing|growth|seo|brand|social media|finance|financial|account|investment|banking|hr|human resources|talent|recruit|people|content|writer|copywriter|creator|design|ux|product manager|product owner|business analyst|sales|business development|operations|management|consultant|commerce|mba/i.test(targetRole);
+}
+
 function isWrongRoleShape(targetRole: string, raw: any) {
   const role = targetRole.toLowerCase();
   const text = JSON.stringify({
@@ -66,6 +70,7 @@ function isWrongRoleShape(targetRole: string, raw: any) {
     project: raw?.recommendedProject,
     opportunities: raw?.opportunities
   }).toLowerCase();
+  if (isNonTechnicalRole(targetRole)) return /docker|kubernetes|redis|postgresql|mongodb|mysql|system design|microservices|api|rest|graphql|python|javascript|typescript|java|react|node\.js|fastapi|django|flask|aws|gcp|azure|machine learning|deep learning|llm|backend|frontend|devops|ci\/cd|github|database|server|deployment|infrastructure|container/.test(text);
   if (role.includes("frontend")) return /docker|kubernetes|redis|fastapi|backend ai|task queue|system design/.test(text);
   if (role.includes("ml") || role.includes("data scientist")) return /frontend developer|react workbench|next\.js app|ui component/.test(text);
   if (role.includes("devops")) return /frontend developer|ml engineer|react|model training/.test(text);

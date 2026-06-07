@@ -207,7 +207,176 @@ export const mockCareerTwin: CareerTwin = {
 export function generateFallbackCareerTwin(targetRole = "Software Developer"): CareerTwin {
   const role = targetRole || "Software Developer";
   const key = role.toLowerCase();
-  const profile = key.includes("frontend")
+  const nonTech = /marketing|growth|seo|brand|social media|finance|financial|account|investment|banking|hr|human resources|talent|recruit|people|content|writer|copywriter|creator|design|ux|product manager|product owner|business analyst|sales|business development|operations|management|consultant|commerce|mba/.test(key);
+  const profile = /marketing|growth|seo|brand|social media/.test(key)
+    ? {
+        careerScore: 78,
+        strengths: ["Communication", "Campaign thinking", "Audience research"],
+        weaknesses: ["SEO", "Google Analytics", "Meta Ads", "Content Strategy"],
+        skills: [
+          { name: "SEO", score: 42, missing: true, recommendation: "Create an SEO content plan with keyword research and ranking targets." },
+          { name: "Google Analytics", score: 35, missing: true, recommendation: "Build a campaign dashboard with traffic, conversion, and channel metrics." },
+          { name: "Meta Ads Manager", score: 30, missing: true, recommendation: "Design a paid campaign plan with audience, budget, and creative variants." },
+          { name: "Content Strategy", score: 58, missing: false, recommendation: "Publish a 30-day content calendar with measurable goals." }
+        ],
+        project: {
+          title: "30-Day Growth Campaign Case Study",
+          reason: `A ${role} profile needs proof of campaign planning, analytics, content strategy, and measurable business impact.`,
+          pitch: "A complete brand growth campaign with audience research, content calendar, ad plan, analytics dashboard, and results report.",
+          techStack: ["SEO", "Google Analytics", "Meta Ads Manager", "Canva", "Content Strategy", "Email Marketing"],
+          timeline: "21 days",
+          careerGain: "+8"
+        },
+        opportunity: role
+      }
+    : /finance|financial|account|investment|banking|commerce|ca/.test(key)
+      ? {
+          careerScore: 76,
+          strengths: ["Numerical analysis", "Business awareness", "Reporting"],
+          weaknesses: ["Financial Modeling", "Excel", "Valuation", "Power BI"],
+          skills: [
+            { name: "Financial Modeling", score: 38, missing: true, recommendation: "Build a three-statement model for a listed company." },
+            { name: "MS Excel", score: 62, missing: false, recommendation: "Create dashboards with formulas, pivots, and scenario analysis." },
+            { name: "Valuation", score: 34, missing: true, recommendation: "Publish a DCF and comparable-company valuation report." },
+            { name: "Power BI", score: 28, missing: true, recommendation: "Create a finance KPI dashboard with clean visual storytelling." }
+          ],
+          project: {
+            title: "Public Company Investment Analysis",
+            reason: `A ${role} profile needs proof of financial modeling, valuation, Excel, and business judgment.`,
+            pitch: "A complete investment memo with financial model, valuation, risk analysis, and dashboard.",
+            techStack: ["MS Excel", "Valuation", "Financial Analysis", "Power BI", "Investment Analysis"],
+            timeline: "18 days",
+            careerGain: "+7"
+          },
+          opportunity: role
+        }
+      : /hr|human resources|talent|recruit|people/.test(key)
+        ? {
+            careerScore: 75,
+            strengths: ["Communication", "People operations", "Coordination"],
+            weaknesses: ["Talent Acquisition", "HRMS Tools", "Onboarding Design", "HR Analytics"],
+            skills: [
+              { name: "Talent Acquisition", score: 46, missing: true, recommendation: "Create a role-wise sourcing and interview process." },
+              { name: "HRMS Tools", score: 32, missing: true, recommendation: "Document an HRMS workflow for hiring and onboarding." },
+              { name: "Onboarding Design", score: 40, missing: true, recommendation: "Build a 30-60-90 day onboarding plan." },
+              { name: "LinkedIn Recruiting", score: 54, missing: false, recommendation: "Create Boolean search strings and outreach templates." }
+            ],
+            project: {
+              title: "Hiring and Onboarding Playbook",
+              reason: `A ${role} profile needs proof of recruiting process, onboarding, candidate experience, and HR operations.`,
+              pitch: "A complete hiring framework with JD library, sourcing plan, interview scorecards, and onboarding workflow.",
+              techStack: ["Talent Acquisition", "LinkedIn Recruiting", "ATS Systems", "Onboarding Design", "HR Analytics"],
+              timeline: "14 days",
+              careerGain: "+7"
+            },
+            opportunity: role
+          }
+        : /content|writer|copywriter|creator|blogger|journalist/.test(key)
+          ? {
+              careerScore: 77,
+              strengths: ["Writing", "Research", "Storytelling"],
+              weaknesses: ["SEO Writing", "Content Calendar", "Brand Voice", "Content Analytics"],
+              skills: [
+                { name: "SEO Writing", score: 44, missing: true, recommendation: "Write search-optimized articles with keyword intent mapping." },
+                { name: "Content Calendar", score: 40, missing: true, recommendation: "Publish a 30-day content calendar for one audience segment." },
+                { name: "Brand Voice", score: 52, missing: false, recommendation: "Create before/after copy samples for a chosen brand." },
+                { name: "Content Analytics", score: 30, missing: true, recommendation: "Track reach, engagement, and conversion for each piece." }
+              ],
+              project: {
+                title: "30-Day Content Series Portfolio",
+                reason: `A ${role} profile needs proof of writing quality, consistency, audience insight, and measurable content performance.`,
+                pitch: "A public content series with strategy, editorial calendar, published pieces, and growth metrics.",
+                techStack: ["Content Writing", "SEO Writing", "Canva", "Content Calendar", "Content Analytics"],
+                timeline: "21 days",
+                careerGain: "+8"
+              },
+              opportunity: role
+            }
+          : /design|ux|ui-ux|graphic|product design/.test(key)
+            ? {
+                careerScore: 78,
+                strengths: ["Visual thinking", "User empathy", "Presentation"],
+                weaknesses: ["Figma", "UX Research", "Wireframing", "User Testing"],
+                skills: [
+                  { name: "Figma", score: 48, missing: true, recommendation: "Create a polished multi-screen prototype with components." },
+                  { name: "UX Research", score: 36, missing: true, recommendation: "Run user interviews and summarize insights." },
+                  { name: "Wireframing", score: 44, missing: true, recommendation: "Document low-fi to hi-fi design evolution." },
+                  { name: "Design Systems", score: 32, missing: true, recommendation: "Build reusable styles, components, and usage rules." }
+                ],
+                project: {
+                  title: "UX Case Study and Figma Prototype",
+                  reason: `A ${role} profile needs proof of research, interaction design, visual polish, and clear design decisions.`,
+                  pitch: "A complete UX case study with research, wireframes, prototype, user testing, and final visual design.",
+                  techStack: ["Figma", "UX Research", "Wireframing", "Prototyping", "User Testing"],
+                  timeline: "21 days",
+                  careerGain: "+8"
+                },
+                opportunity: role
+              }
+            : /product manager|product owner|business analyst/.test(key)
+              ? {
+                  careerScore: 79,
+                  strengths: ["Problem solving", "Stakeholder thinking", "Business analysis"],
+                  weaknesses: ["Product Strategy", "Roadmapping", "User Research", "Metrics & Analytics"],
+                  skills: [
+                    { name: "Product Strategy", score: 44, missing: true, recommendation: "Write a product strategy for a real customer problem." },
+                    { name: "Roadmapping", score: 38, missing: true, recommendation: "Create a prioritized roadmap with tradeoffs." },
+                    { name: "User Research", score: 42, missing: true, recommendation: "Interview users and synthesize pain points." },
+                    { name: "Metrics & Analytics", score: 34, missing: true, recommendation: "Define north-star, activation, and retention metrics." }
+                  ],
+                  project: {
+                    title: "Complete Product PRD Case Study",
+                    reason: `A ${role} profile needs proof of product thinking, prioritization, user research, and business impact.`,
+                    pitch: "A complete PRD for a real feature with research, roadmap, metrics, GTM plan, and stakeholder tradeoffs.",
+                    techStack: ["Product Strategy", "User Research", "Roadmapping", "Jira", "Notion", "Metrics & Analytics"],
+                    timeline: "18 days",
+                    careerGain: "+8"
+                  },
+                  opportunity: role
+                }
+              : /sales|business development|bde|account executive/.test(key)
+                ? {
+                    careerScore: 76,
+                    strengths: ["Communication", "Persuasion", "Relationship building"],
+                    weaknesses: ["Lead Generation", "CRM Management", "Cold Outreach", "Pipeline Management"],
+                    skills: [
+                      { name: "Lead Generation", score: 42, missing: true, recommendation: "Build a qualified prospect list with segmentation." },
+                      { name: "Cold Outreach", score: 38, missing: true, recommendation: "Create a multi-touch outreach sequence and track replies." },
+                      { name: "CRM Management", score: 35, missing: true, recommendation: "Document a pipeline with stages, follow-ups, and forecast." },
+                      { name: "Negotiation", score: 50, missing: false, recommendation: "Write objection-handling scripts for common sales calls." }
+                    ],
+                    project: {
+                      title: "B2B Sales Playbook and Outreach Campaign",
+                      reason: `A ${role} profile needs proof of prospecting, outreach, CRM discipline, and measurable conversion effort.`,
+                      pitch: "A complete sales playbook with target accounts, outreach sequence, pitch deck, CRM pipeline, and results tracking.",
+                      techStack: ["Lead Generation", "Cold Outreach", "HubSpot CRM", "Sales Pitch", "Pipeline Management"],
+                      timeline: "14 days",
+                      careerGain: "+7"
+                    },
+                    opportunity: role
+                  }
+                : /operations|management|consultant|mba/.test(key)
+                  ? {
+                      careerScore: 77,
+                      strengths: ["Communication", "Coordination", "Business thinking"],
+                      weaknesses: ["Project Management", "Process Optimization", "Excel", "Stakeholder Management"],
+                      skills: [
+                        { name: "Project Management", score: 46, missing: true, recommendation: "Create a project plan with milestones, owners, and risks." },
+                        { name: "Process Optimization", score: 38, missing: true, recommendation: "Map a process and propose measurable improvements." },
+                        { name: "Excel", score: 52, missing: false, recommendation: "Build an operations tracker with KPIs and summary views." },
+                        { name: "Stakeholder Management", score: 44, missing: true, recommendation: "Write a communication plan for cross-functional work." }
+                      ],
+                      project: {
+                        title: "Operations Improvement Case Study",
+                        reason: `A ${role} profile needs proof of process improvement, stakeholder handling, planning, and business impact.`,
+                        pitch: "A complete operations case study with process map, KPI dashboard, improvement plan, and presentation deck.",
+                        techStack: ["Project Management", "Process Optimization", "Excel", "PowerPoint", "Stakeholder Management"],
+                        timeline: "18 days",
+                        careerGain: "+7"
+                      },
+                      opportunity: role
+                    }
+                  : key.includes("frontend")
     ? {
         careerScore: 74,
         strengths: ["JavaScript", "HTML/CSS", "UI fundamentals"],
@@ -295,14 +464,20 @@ export function generateFallbackCareerTwin(targetRole = "Software Developer"): C
         ? ["Data Source", "Training Pipeline", "Experiment Tracking", "Inference API", "Monitoring", "Model Registry"]
         : key.includes("devops")
           ? ["GitHub Actions", "Terraform", "Cloud Runtime", "Kubernetes", "Observability", "Rollback Flow"]
-          : mockCareerTwin.recommendedProject.systemDesign,
+          : nonTech
+            ? ["Research", "Strategy", "Execution Plan", "Measurement", "Portfolio Presentation"]
+            : mockCareerTwin.recommendedProject.systemDesign,
+    databaseDesign: nonTech ? ["Brief", "Audience", "Plan", "Assets", "Metrics"] : mockCareerTwin.recommendedProject.databaseDesign,
+    apiEndpoints: nonTech ? ["Research summary", "Strategy document", "Execution checklist", "Results dashboard"] : mockCareerTwin.recommendedProject.apiEndpoints,
     recruiterSignals: key.includes("frontend")
       ? ["React Architecture", "Responsive UI", "Accessibility", "Performance", "Testing", "Product Polish"]
       : key.includes("ml") || key.includes("data scientist")
         ? ["Model Training", "MLOps", "Deployment", "Monitoring", "Experiment Tracking", "Data Pipelines"]
         : key.includes("devops")
           ? ["Infrastructure as Code", "CI/CD", "Kubernetes", "Cloud Deployment", "Observability", "Reliability"]
-          : mockCareerTwin.recommendedProject.recruiterSignals
+          : nonTech
+            ? profile.weaknesses
+            : mockCareerTwin.recommendedProject.recruiterSignals
   };
   return {
     targetRole: role,
