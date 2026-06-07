@@ -78,20 +78,24 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
   const wrongRole = isWrongRoleShape(targetRole, raw);
   const roleRaw = wrongRole ? roleFallback : raw;
   const strengths = Array.isArray(roleRaw?.strengths) ? roleRaw.strengths : roleFallback.strengths;
-  const weaknesses = Array.isArray(roleRaw?.weaknesses) ? roleRaw.weaknesses : roleRaw?.missingSkills || roleFallback.weaknesses;
+  const weaknesses = Array.isArray(roleRaw?.weaknesses)
+    ? roleRaw.weaknesses
+    : Array.isArray(roleRaw?.blockingSkills)
+      ? roleRaw.blockingSkills.map((skill: any) => skill.name)
+      : roleRaw?.missingSkills || roleFallback.weaknesses;
   const skillNames = Array.from(new Set([...(extras.extractedSkills || []), ...strengths, ...weaknesses]));
   const skills = Array.isArray(roleRaw?.skills)
     ? roleRaw.skills.map((skill: any) => ({
         name: String(skill.name),
         score: numberFrom(skill.score, skill.missing ? 35 : 75),
-        missing: Boolean(skill.missing),
+        missing: typeof skill.missing === "boolean" ? skill.missing : skill.status === "missing",
         recommendation: skill.recommendation || `Build proof around ${skill.name}.`
       }))
     : skillNames.map((name) => ({
         name,
         score: weaknesses.includes(name) ? 32 : 78,
         missing: weaknesses.includes(name),
-        recommendation: weaknesses.includes(name) ? `Build ${roleRaw?.recommendedProject?.title || roleFallback.recommendedProject.title}.` : `Use ${name} as profile evidence.`
+        recommendation: weaknesses.includes(name) ? `Build ${roleRaw?.recommendedProject?.title || roleRaw?.recommendedProject?.name || roleFallback.recommendedProject.title}.` : `Use ${name} as profile evidence.`
       }));
 
   const project = roleRaw?.recommendedProject || roleFallback.recommendedProject;
@@ -107,13 +111,13 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
     weaknesses,
     skills,
     recommendedProject: {
-      title: project.title || roleFallback.recommendedProject.title,
-      reason: project.reason || fallbackProject.reason,
+      title: project.title || project.name || roleFallback.recommendedProject.title,
+      reason: project.reason || project.why || fallbackProject.reason,
       techStack: Array.isArray(project.techStack) ? project.techStack : fallbackProject.techStack,
-      timeline: project.timeline || `${Math.max(1, roadmap.length)} weeks`,
-      careerGain: project.careerGain || fallbackProject.careerGain,
+      timeline: project.timeline || project.buildTime || `${Math.max(1, roadmap.length)} weeks`,
+      careerGain: project.careerGain || project.careerScoreGain || fallbackProject.careerGain,
       difficulty: project.difficulty || fallbackProject.difficulty,
-      recruiterAppeal: project.recruiterAppeal || fallbackProject.recruiterAppeal,
+      recruiterAppeal: project.recruiterAppeal || project.recruiterSignal || fallbackProject.recruiterAppeal,
       projectScore: numberFrom(project.projectScore, fallbackProject.projectScore),
       pitch: project.pitch || fallbackProject.pitch,
       buildTime: project.buildTime || project.timeline || fallbackProject.buildTime,
@@ -128,16 +132,16 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
       linkedInPost: project.linkedInPost || fallbackProject.linkedInPost
     },
     futurePrediction: {
-      salary: future.salary || roleFallback.futurePrediction.salary,
+      salary: future.salary || future.salaryGrowth || roleFallback.futurePrediction.salary,
       careerScore: numberFrom(future.careerScore, roleFallback.futurePrediction.careerScore),
       interviewProbability: numberFrom(future.interviewProbability, roleFallback.futurePrediction.interviewProbability),
-      marketPosition: future.marketPosition || raw?.marketAlignment || roleFallback.futurePrediction.marketPosition
+      marketPosition: future.marketPosition || future.nextTitle || raw?.marketAlignment || roleFallback.futurePrediction.marketPosition
     },
     opportunities: opportunities.map((op: any) => ({
       title: op.title || "Opportunity",
       company: op.company || "AI Startup",
-      match: numberFrom(op.matchScore ?? op.match, 75),
-      reason: op.reason || "Ranked by Career Twin.",
+      match: numberFrom(op.matchScore ?? op.matchPercent ?? op.match, 75),
+      reason: op.reason || op.explanation || "Ranked by Career Twin.",
       missingSkills: Array.isArray(op.missingSkills) ? op.missingSkills : roleFallback.opportunities[0].missingSkills,
       location: op.location || "Remote / India",
       salary: op.salary || "Not disclosed",
@@ -149,16 +153,16 @@ function normalizeCareerTwin(raw: any, logs: ExecutionLog[], extras: { extracted
       recommendedAction: op.recommendedAction || `Complete ${project.title || roleFallback.recommendedProject.title}.`,
       prepQuestions: Array.isArray(op.prepQuestions) ? op.prepQuestions : roleFallback.opportunities[0].prepQuestions,
       prepPlan: Array.isArray(op.prepPlan) ? op.prepPlan : roleFallback.opportunities[0].prepPlan,
-      afterProject: op.afterProject || { match: Math.min(99, numberFrom(op.matchScore ?? op.match, 75) + 5), careerScore: Math.min(100, numberFrom(raw?.careerScore, roleFallback.careerScore) + 7), salary: future.salary || roleFallback.futurePrediction.salary }
+      afterProject: op.afterProject || { match: Math.min(99, numberFrom(op.matchScore ?? op.matchPercent ?? op.match, 75) + 5), careerScore: Math.min(100, numberFrom(raw?.careerScore, roleFallback.careerScore) + 7), salary: future.salary || future.salaryGrowth || roleFallback.futurePrediction.salary }
     })),
     timeline: Array.isArray(raw?.timeline) && raw.timeline.length
-      ? raw.timeline
+      ? raw.timeline.map((item: any) => ({ year: String(item.year), title: item.title || item.event, description: item.description, predicted: Boolean(item.predicted ?? item.isPredicted) }))
       : [
           { year: "Now", title: `Career Score ${numberFrom(raw?.careerScore, roleFallback.careerScore)}`, description: "AI Twin initialized from resume, portfolio signals, market, and OpenAI analysis.", predicted: false },
           ...roadmap.slice(0, 3).map((item: string, index: number) => ({ year: `Week ${index + 1}`, title: item, description: "Execution roadmap generated by the Career Twin.", predicted: false })),
           { year: "12 Months", title: targetRole, description: `${future.salary || roleFallback.futurePrediction.salary} with ${numberFrom(future.interviewProbability, 81)}% interview probability.`, predicted: true }
         ],
-    activityFeed: logs.map((entry) => ({ time: entry.time, message: entry.message, type: "agent" })),
+    activityFeed: logs.length ? logs.map((entry) => ({ time: entry.time, message: entry.message, type: "agent" })) : (Array.isArray(raw?.activityFeed) ? raw.activityFeed.map((item: any) => ({ time: item.time, message: item.message || item.event, type: item.type || "agent" })) : []),
     githubData: extras.github,
     marketData: extras.market
   } as CareerTwin;
